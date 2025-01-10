@@ -1,8 +1,6 @@
 .data
 rozmiar: .word 11
-wektor: .word 213, 224, 235, 246, 257, 268, 279, 290, 301, 
-
-312, 323
+wektor: .word 213, 224, 235, 246, 257, 268, 279, 290, 301, 312, 323
 suma1: .word 0
 suma2: .word 0
 stala: .word 26
@@ -49,8 +47,12 @@ loop_suma2:
 
 loop_suma2_finish:
 	SW suma2, R13 
+	LW R4, suma1(R0)
 	sub R13, R13, R4
 	SW roznica, R13
+	LW R7, rozmiar(R0)
+	mult R13, R6, R7
+	SW iloczyn, R13  
 	
 	
 
