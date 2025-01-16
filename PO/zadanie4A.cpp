@@ -1,88 +1,166 @@
 #include <iostream>
 #include <string>
-
+#include <vector>
 
 using namespace std;
 
-
 class ProduktPapierniczy {
+protected:
+    string rodzaj;
+    string nazwa;
+    double cena;
 
+public:
+    ProduktPapierniczy(string rodzaj, string nazwa, double cena) : rodzaj(rodzaj), nazwa(nazwa), cena(cena) {}
 
-
-
-
+    string getRodzaj() { return rodzaj; }
+    string getNazwa() { return nazwa; }
+    double getCena() { return cena; }
 };
 
+class Koperta : public ProduktPapierniczy {
+private:
+    string format;
 
+public:
+    Koperta(string rodzaj, string nazwa, double cena, string format) : ProduktPapierniczy(rodzaj, nazwa, cena), format(format) {}
 
+    string getFormat() { return format; }
+};
+
+class Zeszyt : public ProduktPapierniczy {
+private:
+    int liczbaStron;
+
+public:
+    Zeszyt(string rodzaj, string nazwa, double cena, int liczbaStron) : ProduktPapierniczy(rodzaj, nazwa, cena), liczbaStron(liczbaStron) {}
+
+    int getLiczbaStron() { return liczbaStron; }
+};
+
+class Kredki : public ProduktPapierniczy {
+private:
+    int liczbaSztuk;
+    bool czyDrewniane;
+
+public:
+    Kredki(string rodzaj, string nazwa, double cena, int liczbaSztuk, bool czyDrewniane)
+        : ProduktPapierniczy(rodzaj, nazwa, cena), liczbaSztuk(liczbaSztuk), czyDrewniane(czyDrewniane) {}
+
+    int getLiczbaSztuk() { return liczbaSztuk; }
+    bool getCzyDrewniane() { return czyDrewniane; }
+};
 
 class SklepPapierniczy {
-
 private:
     ProduktPapierniczy* produktNaStanie[1500];
     int aktualnaLiczbaProduktow;
 
 public:
+    SklepPapierniczy() : aktualnaLiczbaProduktow(0) {}
 
-    SklepPapierniczy() {};
+    void dodajNaStan(ProduktPapierniczy* produkt) {
+        if (aktualnaLiczbaProduktow < 1500) {
+            produktNaStanie[aktualnaLiczbaProduktow++] = produkt;
+        }
+    }
 
+    void zdejmijZeStanu(ProduktPapierniczy* produkt) {
+        for (int i = 0; i < aktualnaLiczbaProduktow; ++i) {
+            if (produktNaStanie[i] == produkt) {
+                produktNaStanie[i] = produktNaStanie[--aktualnaLiczbaProduktow];
+                return;
+            }
+        }
+    }
 
-    void dodajNaStan(ProduktPapierniczy* produkt) {};
-    void zdejmijZeStanu(ProduktPapierniczy* produkt) {};
-    ProduktPapierniczy* znajdzProdukt(string rodzaj, string nazwa) {};
-    void wyswietlProdukt() {};
+    ProduktPapierniczy* znajdzProdukt(string rodzaj, string nazwa) {
+        for (int i = 0; i < aktualnaLiczbaProduktow; ++i) {
+            if (produktNaStanie[i]->getRodzaj() == rodzaj && produktNaStanie[i]->getNazwa() == nazwa) {
+                return produktNaStanie[i];
+            }
+        }
+        return nullptr;
+    }
+
+    void wyswietlProdukt() {
+        for (int i = 0; i < aktualnaLiczbaProduktow; ++i) {
+            cout << "Produkt: " << produktNaStanie[i]->getNazwa() << " (" << produktNaStanie[i]->getRodzaj() << ") - Cena: " << produktNaStanie[i]->getCena() << "\n";
+        }
+    }
 };
 
-
-
 class Pracownik {
-
 private:
     string imie;
     string nazwisko;
     SklepPapierniczy* sklep;
+
 public:
-    Pracownik(string imie, string nazwisko, SklepPapierniczy* sklep) {};
-    string getimie();
-    string getNazwisko() {};
-    SklepPapierniczy* getSklep() {};
-    void setSklep(SklepPapierniczy* sklep) {};
+    Pracownik(string imie, string nazwisko, SklepPapierniczy* sklep) : imie(imie), nazwisko(nazwisko), sklep(sklep) {}
 
-
-
-    friend class Sprzedawca;
-    friend class Zaopatrzeniowiec;
-
+    string getImie() { return imie; }
+    string getNazwisko() { return nazwisko; }
+    SklepPapierniczy* getSklep() { return sklep; }
+    void setSklep(SklepPapierniczy* nowySklep) { sklep = nowySklep; }
 };
 
-
-class Sprzedawca {
+class Sprzedawca : public Pracownik {
 public:
-    Sprzedawca(string imie, string nazwisko, SklepPapierniczy* sklep) {};
-    void sprzedajProdukt(string rodzaj, string nazwa) {};
+    Sprzedawca(string imie, string nazwisko, SklepPapierniczy* sklep) : Pracownik(imie, nazwisko, sklep) {}
 
+    void sprzedajProdukt(string rodzaj, string nazwa) {
+        SklepPapierniczy* sklep = getSklep();
+        ProduktPapierniczy* produkt = sklep->znajdzProdukt(rodzaj, nazwa);
+        if (produkt) {
+            cout << "Sprzedano produkt: " << produkt->getNazwa() << "\n";
+            sklep->zdejmijZeStanu(produkt);
+        }
+        else {
+            cout << "Produkt nie znaleziony!\n";
+        }
+    }
 };
 
-class Zaopatrzeniowiec {
+class Zaopatrzeniowiec : public Pracownik {
 private:
     ProduktPapierniczy* produktyNaPace[200];
     int aktualnaLiczbaProduktow;
+
 public:
+    Zaopatrzeniowiec(string imie, string nazwisko, SklepPapierniczy* sklep) : Pracownik(imie, nazwisko, sklep), aktualnaLiczbaProduktow(0) {}
 
-    Zaopatrzeniowiec(string imie, string nazwisko, SklepPapierniczy* sklep) {};
+    void zalodujProduktnaPake(ProduktPapierniczy* produkt) {
+        if (aktualnaLiczbaProduktow < 200) {
+            produktyNaPace[aktualnaLiczbaProduktow++] = produkt;
+        }
+    }
 
-    void zalodujProduktnaPake(ProduktPapierniczy* produkt) {};
-    void dostaczWszystkieProdukty() {};
-
+    void dostaczWszystkieProdukty() {
+        SklepPapierniczy* sklep = getSklep();
+        for (int i = 0; i < aktualnaLiczbaProduktow; ++i) {
+            sklep->dodajNaStan(produktyNaPace[i]);
+        }
+        aktualnaLiczbaProduktow = 0;
+    }
 };
 
-
-
-
-
-
 int main() {
-  
+    SklepPapierniczy sklep;
+    Koperta k1("Koperta", "C6", 0.5, "C6");
+    Zeszyt z1("Zeszyt", "A5", 2.5, 32);
+    Kredki kr1("Kredki", "Colorino", 5.0, 12, true);
+
+    sklep.dodajNaStan(&k1);
+    sklep.dodajNaStan(&z1);
+    sklep.dodajNaStan(&kr1);
+
+    sklep.wyswietlProdukt();
+
+    Sprzedawca sprzedawca("Jan", "Kowalski", &sklep);
+    sprzedawca.sprzedajProdukt("Zeszyt", "A5");
+
+    sklep.wyswietlProdukt();
 
     return 0;
 }
