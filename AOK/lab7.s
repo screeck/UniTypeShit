@@ -51,7 +51,9 @@ TB_loop:
 
 TB_loop_finish:
 
-	SD Suma, R13
+	movi2fp F2, R13
+	cvti2d F4,F2
+	sd Suma, F4
 	
 
 trap 0
