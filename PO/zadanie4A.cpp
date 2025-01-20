@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -13,9 +12,10 @@ protected:
 public:
     ProduktPapierniczy(string rodzaj, string nazwa, double cena) : rodzaj(rodzaj), nazwa(nazwa), cena(cena) {}
 
-    string getRodzaj() { return rodzaj; }
-    string getNazwa() { return nazwa; }
-    double getCena() { return cena; }
+        virtual string getRodzaj() const = 0;
+        virtual string getNazwa() const = 0;
+        virtual double getCena() const = 0;
+
 };
 
 class Koperta : public ProduktPapierniczy {
@@ -26,6 +26,9 @@ public:
     Koperta(string rodzaj, string nazwa, double cena, string format) : ProduktPapierniczy(rodzaj, nazwa, cena), format(format) {}
 
     string getFormat() { return format; }
+    string getRodzaj() const override { return rodzaj; }
+    string getNazwa() const override { return nazwa; }
+    double getCena() const override { return cena; }
 };
 
 class Zeszyt : public ProduktPapierniczy {
@@ -34,6 +37,9 @@ private:
 
 public:
     Zeszyt(string rodzaj, string nazwa, double cena, int liczbaStron) : ProduktPapierniczy(rodzaj, nazwa, cena), liczbaStron(liczbaStron) {}
+    string getRodzaj() const override { return rodzaj; }
+    string getNazwa() const override { return nazwa; }
+    double getCena() const override { return cena; }
 
     int getLiczbaStron() { return liczbaStron; }
 };
@@ -47,6 +53,9 @@ public:
     Kredki(string rodzaj, string nazwa, double cena, int liczbaSztuk, bool czyDrewniane)
         : ProduktPapierniczy(rodzaj, nazwa, cena), liczbaSztuk(liczbaSztuk), czyDrewniane(czyDrewniane) {}
 
+    string getRodzaj() const override { return rodzaj; }
+    string getNazwa() const override { return nazwa; }
+    double getCena() const override { return cena; }
     int getLiczbaSztuk() { return liczbaSztuk; }
     bool getCzyDrewniane() { return czyDrewniane; }
 };
@@ -68,10 +77,18 @@ public:
     void zdejmijZeStanu(ProduktPapierniczy* produkt) {
         for (int i = 0; i < aktualnaLiczbaProduktow; ++i) {
             if (produktNaStanie[i] == produkt) {
-                produktNaStanie[i] = produktNaStanie[--aktualnaLiczbaProduktow];
+               
+                for (int j = i; j < aktualnaLiczbaProduktow - 1; ++j) {
+                    produktNaStanie[j] = produktNaStanie[j + 1];
+                }
+              
+                produktNaStanie[aktualnaLiczbaProduktow - 1] = nullptr;
+                
+                aktualnaLiczbaProduktow--;
                 return;
             }
         }
+        cout << "Produkt nie znaleziony!\n";
     }
 
     ProduktPapierniczy* znajdzProdukt(string rodzaj, string nazwa) {
@@ -159,6 +176,8 @@ int main() {
 
     Sprzedawca sprzedawca("Jan", "Kowalski", &sklep);
     sprzedawca.sprzedajProdukt("Zeszyt", "A5");
+    
+    sklep.zdejmijZeStanu(&kr1);
 
     sklep.wyswietlProdukt();
 
