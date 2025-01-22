@@ -27,10 +27,17 @@ unsigned int crc32(const unsigned char* data, size_t length) {
     return ~crc;
 }
 
-void lz77Decode(const char* inputFileName, char* outputText) {
+void lz77Decode(const char* inputFileName, const char* outputFileName) {
     FILE* inputFile = fopen(inputFileName, "rb");
     if (!inputFile) {
-        fprintf(stderr, "Error opening file\n");
+        fprintf(stderr, "Error opening input file\n");
+        exit(1);
+    }
+
+    FILE* outputFile = fopen(outputFileName, "wb");
+    if (!outputFile) {
+        fprintf(stderr, "Error opening output file\n");
+        fclose(inputFile);
         exit(1);
     }
 
@@ -53,12 +60,12 @@ void lz77Decode(const char* inputFileName, char* outputText) {
         fprintf(stderr, "Data integrity check failed! Exiting.\n");
         free(encodedData);
         fclose(inputFile);
+        fclose(outputFile);
         exit(1);
     }
 
     char window[WINDOW_SIZE + 1] = "";  // Sliding window buffer
     size_t windowLength = 0;           // Current window length
-    size_t outputLength = 0;           // Current output text length
 
     size_t offset = 0;
     while (offset < dataSize) {
@@ -69,7 +76,7 @@ void lz77Decode(const char* inputFileName, char* outputText) {
             size_t matchStart = windowLength > triplet->offset ? windowLength - triplet->offset : 0;
             for (int i = 0; i < triplet->length; i++) {
                 char matchChar = window[matchStart + i];
-                outputText[outputLength++] = matchChar;
+                fwrite(&matchChar, 1, 1, outputFile);
 
                 // Append to the window
                 if (windowLength < WINDOW_SIZE) {
@@ -83,7 +90,7 @@ void lz77Decode(const char* inputFileName, char* outputText) {
         }
 
         if (triplet->symbol != '\0') {
-            outputText[outputLength++] = triplet->symbol;
+            fwrite(&triplet->symbol, 1, 1, outputFile);
 
             // Append to the window
             if (windowLength < WINDOW_SIZE) {
@@ -96,17 +103,22 @@ void lz77Decode(const char* inputFileName, char* outputText) {
         }
     }
 
-    outputText[outputLength] = '\0';  // Null-terminate the output text
     free(encodedData);
     fclose(inputFile);
+    fclose(outputFile);
 }
 
-int main() {
-    const char* inputFileName = "C:\\Users\\mjank\\Desktop\\output.bin";
-    char outputText[1024] = "";  // Adjust size as needed
+int main(int argc, char* argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <input file> <output file>\n", argv[0]);
+        return 1;
+    }
 
-    lz77Decode(inputFileName, outputText);
+    const char* inputFileName = argv[1];
+    const char* outputFileName = argv[2];
 
-    printf("Decoded text: %s\n", outputText);
+    lz77Decode(inputFileName, outputFileName);
+
+    printf("Decoding complete. Data written to %s\n", outputFileName);
     return 0;
 }
